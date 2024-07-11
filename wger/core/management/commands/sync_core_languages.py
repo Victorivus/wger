@@ -1,10 +1,20 @@
+# Standard Library
 import json
 import os
-from django.core.management.base import BaseCommand
-from django.db import transaction, connection, IntegrityError
-from django.db.utils import OperationalError
+
+# Django
 from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.db import (
+    IntegrityError,
+    connection,
+    transaction,
+)
+from django.db.utils import OperationalError
+
+# wger
 from wger.core.models import Language  # Ensure you have the correct model import
+
 
 class Command(BaseCommand):
     """
@@ -61,20 +71,23 @@ class Command(BaseCommand):
                 # Load fixture data into the temporary table
                 self.stdout.write('Loading data into temporary table')
                 for record in json_data:
-                    pk = record["pk"]
-                    fields = record["fields"]
-                    short_name = fields["short_name"]
-                    full_name = fields["full_name"]
-                    full_name_en = fields["full_name_en"]
+                    pk = record['pk']
+                    fields = record['fields']
+                    short_name = fields['short_name']
+                    full_name = fields['full_name']
+                    full_name_en = fields['full_name_en']
 
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO temp_core_language (id, short_name, full_name, full_name_en)
                         VALUES (%s, %s, %s, %s)
                         ON CONFLICT (id) DO UPDATE
                         SET short_name = EXCLUDED.short_name,
                             full_name = EXCLUDED.full_name,
                             full_name_en = EXCLUDED.full_name_en;
-                    """, [pk, short_name, full_name, full_name_en])
+                    """,
+                        [pk, short_name, full_name, full_name_en],
+                    )
 
                 # Correct IDs and update references
                 self.stdout.write('Updating core_language table and correcting references')
@@ -99,7 +112,7 @@ class Command(BaseCommand):
                             id=temp_id,
                             short_name=temp_short_name,
                             full_name=temp_full_name,
-                            full_name_en=temp_full_name_en
+                            full_name_en=temp_full_name_en,
                         )
 
                 self.stdout.write('Successfully synchronized core_language table')
